@@ -794,15 +794,17 @@ class IRC22_2014:
         else:
             tau_b = fyw_MPa / (math.sqrt(3) * lambda_w ** 2)
 
-        # 5) Design shear resistance
-        Vrd_N = Av_mm2 * tau_b
+        # 5) Nominal and design shear resistance — IS 800:2007 Cl.8.4.2.1: Vn = Vcr, Vd = Vn/gamma_m0
+        Vn_N = Av_mm2 * tau_b
+        Vd_N = Vn_N / GAMMA_M0_STEEL
 
         return {
             "Kv": round(Kv, 3),
             "tau_cr_MPa": round(tau_cr, 3),
             "lambda_w": round(lambda_w, 3),
             "tau_b_MPa": round(tau_b, 3),
-            "Vrd_kN": round(Vrd_N / 1e3, 3),
+            "Vn_kN": round(Vn_N / 1e3, 3),
+            "Vrd_kN": round(Vd_N / 1e3, 3),
             "clause": "IRC 22:2014 - 603.3.3.2 (IS 800:2007 8.4.2.2a)"
         }
 

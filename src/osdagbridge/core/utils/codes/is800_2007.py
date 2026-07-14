@@ -1504,10 +1504,12 @@ class IS800_2007(object):
         psi = 1.5 * tau_b * math.sin(2 * math.radians(phi))
         fv  = math.sqrt(fyw**2 - 3 * tau_b**2 + psi**2) - psi
 
-        # 6) Nominal shear resistance V_tf (kN)
-        V_tf = (A_v * tau_b + 0.9 * w_tf * tw * fv * sinφ)
-        V_p = d * tw * fyw / (math.sqrt(3) * gamma_m0)  # Plastic shear strength
-        V_tf = min(V_tf, V_p)
+        # 6) Nominal shear resistance Vn, capped at nominal plastic shear strength,
+        #    then divided by gamma_m0 for the design resistance — IS 800:2007 Cl.8.4.2.1: Vd = Vn/gamma_m0
+        Vn_tf = A_v * tau_b + 0.9 * w_tf * tw * fv * sinφ
+        Vn_p = A_v * fyw / math.sqrt(3)  # nominal plastic shear strength (not yet factored by gamma_m0)
+        Vn_tf = min(Vn_tf, Vn_p)
+        V_tf = Vn_tf / gamma_m0
 
         return phi, Mfr_t, Mfr_b, s_t, s_b, w_tf, psi, fv, V_tf
 
