@@ -5,7 +5,7 @@ import io
 import re
 
 def _to_display_style(latex: str) -> str:
-    """Replace \frac with \dfrac so num/denom render at full glyph size."""
+    r"""Replace \frac with \dfrac so num/denom render at full glyph size."""
     return latex.replace(r"\frac", r"\dfrac")
 
 import matplotlib
@@ -83,6 +83,28 @@ _EQ_LATEX: dict[str, tuple[tuple[str, int, bool], ...]] = {
         (r"$\mathrm{(Default}\ x = 600\mathrm{)}$",                 160, False),
     ),
 }
+def _get_shear_latex(governing_method: str):
+    """
+    Return the governing shear equations for the Design Check panel.
+    """
+
+    if governing_method == "post_critical":
+        return (
+            (r"$V_d \leq V_{cr}$", 90, False),
+            (r"$V_{cr}=A_v \cdot \tau_b$", 140, False),
+        )
+
+    elif governing_method == "tension_field":
+        return (
+            (r"$V_d \leq V_{tf}$", 90, False),
+            (r"$V_n=V_{tf}$", 120, False),
+        )
+
+    # Default → Plastic Shear Resistance
+    return (
+        (r"$V_d \leq V_p$", 90, False),
+        (r"$V_p=\frac{A_v \cdot f_y}{\sqrt{3}\,\gamma_{m0}}$", 170, True),
+    )
 
 # ---------------------------------------------------------------------------
 # LaTeX → SVG via matplotlib mathtext
@@ -203,6 +225,7 @@ class LatexEquationView(QWidget):
         outer.addStretch()
         outer.addWidget(inner)
         outer.addStretch()
+    
 # ---------------------------------------------------------------------------
 # StatusBadge
 # ---------------------------------------------------------------------------
@@ -527,6 +550,7 @@ class SteelDesignCheckTab(QWidget):
                     "capacity": worst.capacity,
                     "ratio":    worst.dcr,
                     "passed":   worst.status != "FAIL",
+                    "governing_method": worst.governing_method,
                 }
             except Exception:
                 logger.exception("Failed to load checks %s for key %s", ids, key)
@@ -551,6 +575,35 @@ class SteelDesignCheckTab(QWidget):
         ratio    = res.get("ratio",    0.0)
         passed   = res.get("passed",   False)
         unit_str = f" {DESIGN_CHECK_UNITS[key]}" if DESIGN_CHECK_UNITS.get(key) else ""
+        
+        if key == KEY_CHECK_SHEAR:
+    
+            governing_method = res.get("governing_method")
+
+            new_lines = _get_shear_latex(governing_method)
+
+            old_eq = self.check_eq_views.get(key)
+
+            if old_eq is not None:
+                card = self.check_cards[key]
+                layout = card.layout()
+
+        # Remove the old equation widget
+                layout.removeWidget(old_eq)
+                old_eq.hide()
+                old_eq.setParent(None)
+                old_eq.deleteLater()
+
+        # Create the new equation widget
+                new_eq = LatexEquationView(new_lines)
+
+        # Insert it back below the title (index 1)
+                layout.insertWidget(1, new_eq)
+
+        # Store the new widget
+                self.check_eq_views[key] = new_eq
+        
+        
 
         if key == KEY_CHECK_INTERACTION:
             val_text = (
@@ -560,13 +613,23 @@ class SteelDesignCheckTab(QWidget):
         else:
             dem_pfx = DESIGN_CHECK_DEM_PFX.get(key, "Demand")
             cap_pfx = DESIGN_CHECK_CAP_PFX.get(key, "Capacity")
+
+            if key == KEY_CHECK_SHEAR:
+                method = res.get("governing_method")
+
+                if method == "plastic":
+                    cap_pfx = "<i>V<sub>p</sub></i>"
+                elif method == "post_critical":
+                    cap_pfx = "<i>V<sub>cr</sub></i>"
+                elif method == "tension_field":
+                    cap_pfx = "<i>V<sub>tf</sub></i>"
+
             val_text = (
                 f"{dem_pfx} = {demand:.2f}{unit_str}<br>"
                 f"{cap_pfx} = {capacity:.2f}{unit_str}"
             )
-
+        
         dcr_color = "#388E3C" if passed else "#D32F2F"
-
         val_lbl = self.check_val_labels[key]
         val_lbl.setTextFormat(Qt.RichText)
         val_lbl.setText(val_text)
