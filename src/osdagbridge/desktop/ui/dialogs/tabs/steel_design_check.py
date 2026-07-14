@@ -97,7 +97,7 @@ def _get_shear_latex(governing_method: str):
     elif governing_method == "tension_field":
         return (
             (r"$V_d \leq V_{tf}$", 90, False),
-            (r"$V_n=V_{tf}$", 120, False),
+            (r"$V_{tf}=\left[A_v\,\tau_b+0.9\,w_f\,t_w\,f_v\,\sin\phi\right]$", 120, False),
         )
 
     # Default → Plastic Shear Resistance
