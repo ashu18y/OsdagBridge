@@ -384,6 +384,14 @@ KEY_SD_TS_VL         = "steeldesign.transverse_shear.vl_kN_per_m"
 KEY_SD_TS_VCAP_CONC  = "steeldesign.transverse_shear.vcap_concrete_kN_per_m"
 KEY_SD_TS_VCAP_REINF = "steeldesign.transverse_shear.vcap_reinf_kN_per_m"
 KEY_SD_TS_VRD        = "steeldesign.transverse_shear.vrd_kN_per_m"
+KEY_SD_TS_V          = "steeldesign.transverse_shear.v_kN"
+KEY_SD_TS_AEC        = "steeldesign.transverse_shear.aec_mm2"
+KEY_SD_TS_Y          = "steeldesign.transverse_shear.y_mm"
+KEY_SD_TS_IC         = "steeldesign.transverse_shear.ic_mm4"
+KEY_SD_TS_TEFF       = "steeldesign.transverse_shear.teff_mm"
+KEY_SD_TS_BEFF       = "steeldesign.transverse_shear.beff_mm"
+KEY_SD_TS_XU         = "steeldesign.transverse_shear.xu_mm"
+KEY_SD_TS_TSLAB      = "steeldesign.transverse_shear.tslab_mm"
 
 # ── Generate-Results Crack Width table keys ───────────────────────────────────
 # Minimum crack-control reinforcement (IRC 22 Cl.604.4) — design_results.

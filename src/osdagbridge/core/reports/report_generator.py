@@ -317,6 +317,14 @@ from osdagbridge.core.utils.common import (
     KEY_SD_SC_SR,
     # Transverse shear & detailing keys (Table 5.16) — nested in design_results
     KEY_SD_TS_VL,
+    KEY_SD_TS_V,
+    KEY_SD_TS_AEC,
+    KEY_SD_TS_Y,
+    KEY_SD_TS_IC,
+    KEY_SD_TS_TEFF,
+    KEY_SD_TS_BEFF,
+    KEY_SD_TS_XU,
+    KEY_SD_TS_TSLAB,
     KEY_SD_TS_VRD,
     KEY_SD_SC_D_LIMIT,
     KEY_SD_SC_EDGE_DIST,
@@ -2319,9 +2327,25 @@ Fatigue Shear Resistance, $Q_r$ & IRC 22 Table 8 ($\phi d$, $N_{sc}$) & """
     def _knm(v):
         s = _dfmt(v, nd=2)
         return (s + " kN/m") if s else ""
+    
+    def _mm2(v):
+        s = _dfmt(v, nd=2)
+        return (s + " mm$^2$") if s else ""
+    
+    def _mm4(v):
+        s = _dfmt(v, nd=2)
+        return (s + " mm$^4$") if s else ""
 
     _ts_vl  = _dr_sc.get(KEY_SD_TS_VL)
     _ts_vrd = _dr_sc.get(KEY_SD_TS_VRD)
+    _ts_v   = _dr_sc.get(KEY_SD_TS_V)
+    _ts_aec   = _dr_sc.get(KEY_SD_TS_AEC)
+    _ts_y     = _dr_sc.get(KEY_SD_TS_Y)
+    _ts_ic    = _dr_sc.get(KEY_SD_TS_IC)
+    _ts_teff  = _dr_sc.get(KEY_SD_TS_TEFF)
+    _ts_beff  = _dr_sc.get(KEY_SD_TS_BEFF)
+    _ts_xu    = _dr_sc.get(KEY_SD_TS_XU)
+    _ts_tslab = _dr_sc.get(KEY_SD_TS_TSLAB)
     try:
         _ts_ur_str = f"{float(_ts_vl) / float(_ts_vrd):.2f}"
     except (TypeError, ValueError, ZeroDivisionError):
@@ -2346,8 +2370,44 @@ Fatigue Shear Resistance, $Q_r$ & IRC 22 Table 8 ($\phi d$, $N_{sc}$) & """
     _edge     = _dr_sc.get(KEY_SD_SC_EDGE_DIST)
     _edge_req = _dr_sc.get(KEY_SD_SC_REQ_EDGE_DIST)
 
+
+    def _row515a(parameter, expression, value,):
+        return parameter + r" & " + expression + r" & " + value + r" \\[6pt]"
+    
     def _row516(check, value, status):
         return check + r" & " + value + r" & " + status + r" \\[6pt]"
+    
+    t515a_content = (
+        _row515a(
+            r"$V$",
+            r"\textnormal{Factored Shear Force, $V$}",
+            _dfmt(_ts_v, nd=2) + " kN",
+        ) + "\n\\hline\n"
+
+        + _row515a(
+            r"$A_{ec}$",
+            r"\textnormal{Effective Concrete Area, $A_{ec}$}",
+            _mm2(_ts_aec),
+        ) + "\n\\hline\n"
+
+        + _row515a(
+            r"$Y$",
+            r"\textnormal{Distance to Centroid, $Y$}",
+            _mm(_ts_y),
+        ) + "\n\\hline\n"
+
+        + _row515a(
+            r"$I_c$",
+            r"\textnormal{Composite Second Moment of Area, $I_c$}",
+            _mm4(_ts_ic),
+        ) + "\n\\hline\n"
+
+        + _row515a(
+            r"$V_L$",
+            r"$V_L=\dfrac{V \times A_{ec} \times Y}{I_c}$",
+            _dfmt(_ts_vl, nd=2) + " N/mm",
+        ) + "\n\\hline"
+)
 
     t516_content = (
         _row516(r"\textnormal{Longitudinal Shear per unit length, $V_L$}", _knm(_ts_vl), "---") + "\n\\hline\n"
@@ -2884,6 +2944,23 @@ This section presents all structural design checks performed by OsdagBridge. For
 """ + t515_content + r"""
 \end{longtable}
 \noindent\textit{Note: IRC 22 Cl. 606.4, 606.9. Governing spacing $= \min(S_{L1}, S_{L2}, S_R)$.}
+% -----------------------------
+% Table 5.15: Longitudinal Shear
+% -----------------------------
+
+\vspace{1em}
+
+\begin{longtable}{|L{3.0cm}|>{\arraybackslash}p{7.5cm}|C{4.0cm}|}
+\caption{\textbf{Longitudinal Shear Calculation (IRC 22 Cl.606.4.1)}}
+\hline
+\textbf{Parameter} &
+\textbf{Expression} &
+\textbf{Value} \\[6pt]
+\hline
+""" + t515a_content + r"""
+\end{longtable}
+
+\noindent\textit{Note: IRC 22 Cl. 606.4.1.}
 
 \vspace{1em}
 \begin{longtable}{|L{5.3cm}|>{\arraybackslash}p{7.2cm}|C{2.0cm}|}
