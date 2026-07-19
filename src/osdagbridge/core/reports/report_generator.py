@@ -315,6 +315,7 @@ from osdagbridge.core.utils.common import (
     KEY_SD_SC_SL1,
     KEY_SD_SC_SL2,
     KEY_SD_SC_SR,
+    KEY_SD_SC_VR_PER_MM,
     KEY_SD_SC_H1_kN,
     KEY_SD_SC_H2_kN,
     KEY_SD_SC_SHEAR_SPAN,
@@ -2317,7 +2318,7 @@ Fatigue Shear Resistance, $Q_r$ & IRC 22 Table 8 ($\phi d$, $N_{sc}$) & """
     def _detail_row(text):
         return (
             r"\multicolumn{4}{|p{0.96\linewidth}|}{"
-            r"\hspace{5mm}\footnotesize "
+            r"\hspace{8mm}\small "
             + text +
             r"} \\"
         )
@@ -2332,7 +2333,7 @@ Fatigue Shear Resistance, $Q_r$ & IRC 22 Table 8 ($\phi d$, $N_{sc}$) & """
         + "\n"
         + _detail_row(r"$S_{L1}=\dfrac{\sum Q_u}{V_L}$"
             r"\hfill"
-            r"textnormal{(IRC 22 Cl. 606.4.1)}")
+            r"\textnormal{(VL: See Table 5.15; IRC 22 Cl. 606.4.1)}")
         + "\n\\hline\n"
         + _sp_row("Full Composite (SL2)", _dr_sc.get(KEY_SD_SC_SL2))
         + "\n"
@@ -2346,9 +2347,24 @@ Fatigue Shear Resistance, $Q_r$ & IRC 22 Table 8 ($\phi d$, $N_{sc}$) & """
         + "\n"
         + _detail_row(r"$S_{L2}=\dfrac{\sum Q_u}{H}\,L$")
         + "\n\\hline\n"
-        + _sp_row("SLS Fatigue (SR)", _dr_sc.get(KEY_SD_SC_SR)) + "\n\\hline\n"
+        + _sp_row("SLS Fatigue (SR)", _dr_sc.get(KEY_SD_SC_SR))
+        + "\n"
+        + _detail_value(r"$V_R$", _dr_sc.get(KEY_SD_SC_Vr_kN), "kN")
+        + "\n"
+        + _detail_row(
+            r"$V_r=\dfrac{V_R\,A_{ec}\,Y}{I}$"
+            r"\hfill"
+            r"\textnormal{($A_{ec}$, $Y$, $I_c$: See Table 5.15)}"
+        )
+        + "\n"
+        + _detail_value(r"$V_r$", _dr_sc.get(KEY_SD_SC_VR_PER_MM), r"kN/mm")
+        + "\n"
+        + _detail_row(
+            r"$S_R=\dfrac{\sum Q_r}{V_r}$"
+        )
+        + "\n\\hline\n"
         + _sp_row("Max Spacing Limit (IRC 22)", _dr_sc.get("stud_spacing_max_mm")) + "\n\\hline"
-)
+        )
 
     # ── Table 5.16: Transverse Shear & Detailing Checks (bridge-level) ───────
     # Transverse shear (Cl.606.10): VL vs slab capacity VRd. Detailing (Cl.606.6):

@@ -3546,6 +3546,7 @@ def run_design_check(
         KEY_SD_SC_SHEAR_SPAN       : (capacity.details.get("stud_spacing_full_shear") or {}).get("shear_span_mm"),
         KEY_SD_SC_H_kN             : (capacity.details.get("stud_spacing_full_shear") or {}).get("H_governing_kN"),
         KEY_SD_SC_Vr_kN            : (capacity.details.get("stud_spacing_fatigue")    or {}).get("Vr_kN"),
+        KEY_SD_SC_VR_PER_MM        : (capacity.details.get("stud_spacing_fatigue")    or {}).get("Vr_per_mm_kN"),
         KEY_SD_SC_LIMIT_600        : (capacity.details.get("stud_spacing_limits")     or {}).get("limit_600_mm"),
         KEY_SD_SC_LIMIT_3TSLAB     : (capacity.details.get("stud_spacing_limits")     or {}).get("limit_3_tslab_mm"),
         KEY_SD_SC_LIMIT_4HSTUD     : (capacity.details.get("stud_spacing_limits")     or {}).get("limit_4_hstud_mm"),
