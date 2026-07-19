@@ -2318,7 +2318,7 @@ Fatigue Shear Resistance, $Q_r$ & IRC 22 Table 8 ($\phi d$, $N_{sc}$) & """
     def _detail_row(text):
         return (
             r"\multicolumn{4}{|p{0.96\linewidth}|}{"
-            r"\hspace{8mm}\small "
+            r"\hspace{2mm}\small "
             + text +
             r"} \\"
         )
@@ -2333,7 +2333,7 @@ Fatigue Shear Resistance, $Q_r$ & IRC 22 Table 8 ($\phi d$, $N_{sc}$) & """
         + "\n"
         + _detail_row(r"$S_{L1}=\dfrac{\sum Q_u}{V_L}$"
             r"\hfill"
-            r"\textnormal{(VL: See Table 5.15; IRC 22 Cl. 606.4.1)}")
+            r"\textnormal{($V_L$: See Table 5.15; IRC 22 Cl. 606.4.1)}")
         + "\n\\hline\n"
         + _sp_row("Full Composite (SL2)", _dr_sc.get(KEY_SD_SC_SL2))
         + "\n"
