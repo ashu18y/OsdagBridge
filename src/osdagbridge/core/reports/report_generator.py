@@ -315,6 +315,11 @@ from osdagbridge.core.utils.common import (
     KEY_SD_SC_SL1,
     KEY_SD_SC_SL2,
     KEY_SD_SC_SR,
+    KEY_SD_SC_H1_kN,
+    KEY_SD_SC_H2_kN,
+    KEY_SD_SC_SHEAR_SPAN,
+    KEY_SD_SC_H_kN,
+    KEY_SD_SC_Vr_kN,
     # Transverse shear & detailing keys (Table 5.16) — nested in design_results
     KEY_SD_TS_VL,
     KEY_SD_TS_V,
@@ -2308,13 +2313,42 @@ Fatigue Shear Resistance, $Q_r$ & IRC 22 Table 8 ($\phi d$, $N_{sc}$) & """
     def _sp_row(crit, req):
         return (crit + r" & " + _mm(req) + r" & " + _sc_prov_str + r" & "
                 + _defl_status(_sc_prov, req) + r" \\[6pt]")
-
+        
+    def _detail_row(text):
+        return (
+            r"\multicolumn{4}{|p{0.96\linewidth}|}{"
+            r"\hspace{5mm}\footnotesize "
+            + text +
+            r"} \\"
+        )
+    def _detail_value(name, value, unit=""):
+        s = _dfmt(value, nd=2)
+        return _detail_row(
+            rf"{name} = {s}" + (f" {unit}" if s else "")
+        )    
+    
     t515_content = (
-        _sp_row("ULS Shear (SL1)",            _dr_sc.get(KEY_SD_SC_SL1)) + "\n\\hline\n"
-        + _sp_row("Full Composite (SL2)",       _dr_sc.get(KEY_SD_SC_SL2)) + "\n\\hline\n"
-        + _sp_row("SLS Fatigue (SR)",           _dr_sc.get(KEY_SD_SC_SR)) + "\n\\hline\n"
+        _sp_row("ULS Shear (SL1)", _dr_sc.get(KEY_SD_SC_SL1))
+        + "\n"
+        + _detail_row(r"$S_{L1}=\dfrac{\sum Q_u}{V_L}$"
+            r"\hfill"
+            r"textnormal{(IRC 22 Cl. 606.4.1)}")
+        + "\n\\hline\n"
+        + _sp_row("Full Composite (SL2)", _dr_sc.get(KEY_SD_SC_SL2))
+        + "\n"
+        + _detail_value(r"$H_1$", _dr_sc.get(KEY_SD_SC_H1_kN), "kN")
+        + "\n"
+        + _detail_value(r"$H_2$", _dr_sc.get(KEY_SD_SC_H2_kN), "kN")
+        + "\n"
+        + _detail_row(
+            rf"$H=\min(H_1,H_2)={_dfmt(_dr_sc.get(KEY_SD_SC_H_kN), nd=2)}\,\mathrm{{kN}}$"
+        )
+        + "\n"
+        + _detail_row(r"$S_{L2}=\dfrac{\sum Q_u}{H}\,L$")
+        + "\n\\hline\n"
+        + _sp_row("SLS Fatigue (SR)", _dr_sc.get(KEY_SD_SC_SR)) + "\n\\hline\n"
         + _sp_row("Max Spacing Limit (IRC 22)", _dr_sc.get("stud_spacing_max_mm")) + "\n\\hline"
-    )
+)
 
     # ── Table 5.16: Transverse Shear & Detailing Checks (bridge-level) ───────
     # Transverse shear (Cl.606.10): VL vs slab capacity VRd. Detailing (Cl.606.6):

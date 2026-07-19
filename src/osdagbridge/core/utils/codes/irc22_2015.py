@@ -1901,6 +1901,7 @@ class IRC22_2014:
         spacing_mm = total_Qu_kN / Vr_per_mm_kN
 
         return {
+            "Vr_kN": round(Vr_kN, 2),
             "Aec_mm2": round(Aec_mm2, 2),
             "t_eff_mm": round(t_eff, 2),
             "Y_mm": round(Y_mm, 2),

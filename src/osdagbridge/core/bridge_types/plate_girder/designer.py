@@ -3541,6 +3541,9 @@ def run_design_check(
         KEY_SD_SC_SL1              : capacity.stud_spacing_mm,
         KEY_SD_SC_SL2              : capacity.stud_spacing_full_shear_mm,
         KEY_SD_SC_SR               : capacity.stud_spacing_fatigue_mm,
+        KEY_SD_SC_H1_kN            : (capacity.details.get("stud_spacing_full_shear") or {}).get("H1_kN"),
+        KEY_SD_SC_H2_kN            : (capacity.details.get("stud_spacing_full_shear") or {}).get("H2_kN"),
+        KEY_SD_SC_SHEAR_SPAN       : (capacity.details.get("stud_spacing_full_shear") or {}).get("shear_span_mm"),
         KEY_SD_SC_H_kN             : (capacity.details.get("stud_spacing_full_shear") or {}).get("H_governing_kN"),
         KEY_SD_SC_Vr_kN            : (capacity.details.get("stud_spacing_fatigue")    or {}).get("Vr_kN"),
         KEY_SD_SC_LIMIT_600        : (capacity.details.get("stud_spacing_limits")     or {}).get("limit_600_mm"),
@@ -3629,5 +3632,13 @@ def run_design_check(
         # -- ULS check table (Generate Results): per-girder demand/capacity/UR/status
         KEY_SD_ULS_PER_GIRDER       : _build_uls_per_girder(per_girder_results),
     }
+    print("\n===== SL2 DEBUG =====")
+    print({
+        "H1": design_results.get(KEY_SD_SC_H1_kN),
+        "H2": design_results.get(KEY_SD_SC_H2_kN),
+        "H": design_results.get(KEY_SD_SC_H_kN),
+        "Span": design_results.get(KEY_SD_SC_SHEAR_SPAN),
+        "SL2": design_results.get(KEY_SD_SC_SL2),
+})
 
     return report_text, engine, design_results
