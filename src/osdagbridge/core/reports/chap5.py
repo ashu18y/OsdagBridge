@@ -1581,7 +1581,9 @@ The reinforced concrete deck slab is designed per IRC~112:2011 (flexure, shear, 
 \hline
 \textnormal{Tyre Contact Width (IRC 6 Annex~A)} & """ + _dkf(KEY_DD_TYRE_WIDTH, nd=0, scale=1000.0) + r""" mm (transverse) \\[6pt]
 \hline
-\textnormal{Impact Factor (IRC 6 Cl. 208.2)} & """ + _dkf(KEY_DD_IMPACT_FACTOR, nd=3) + r""" \\[6pt]
+\textnormal{Impact Factor Fraction, $i$ (IRC 6 Cl. 208.2)} & """ + (f"{_dkv(KEY_DD_IMPACT_FACTOR) - 1.0:.3f}" if _dk_has else _DKPH) + r""" \\[6pt]
+\hline
+\textnormal{Impact Multiplier, $(1+i)$} & """ + _dkf(KEY_DD_IMPACT_FACTOR, nd=3) + r""" \\[6pt]
 \hline
 \textnormal{Governing Live Load Case} & """ + _dkf(KEY_DD_VEHICLE) + r""" \\[6pt]
 \hline
@@ -1597,7 +1599,7 @@ The reinforced concrete deck slab is designed per IRC~112:2011 (flexure, shear, 
 \cline{2-5}
  & Transverse BM (LL), $M_{T,LL}$ & Effective width (IRC 112 B3.1) & """ + _dkf(KEY_DD_M_LL, nd=2) + r""" kN-m/m & --- \\[6pt]
 \cline{2-5}
- & Total Design BM, $M_{u,sag}$ & """ + _dkf(KEY_DD_GAMMA_DL, nd=2) + r"""\,$M_{T,DL}$ + """ + _dkf(KEY_DD_GAMMA_LL, nd=2) + r"""\,(1+IF)\,$M_{T,LL}$ & """ + _dkf(KEY_DD_M_ULS_SAG, nd=2) + r""" kN-m/m & --- \\[6pt]
+ & Total Design BM, $M_{u,sag}$ & """ + _dkf(KEY_DD_GAMMA_DL, nd=2) + r"""\,$M_{T,DL}$ + """ + _dkf(KEY_DD_GAMMA_LL, nd=2) + r"""\,(1+i)\,$M_{T,LL}$ & """ + _dkf(KEY_DD_M_ULS_SAG, nd=2) + r""" kN-m/m & --- \\[6pt]
 \cline{2-5}
  & Effective depth, $d$ & $t_s - c_{nom} - \phi/2$ & """ + _dkf(KEY_DD_D_BOT, nd=1) + r""" mm & --- \\[6pt]
 \cline{2-5}
@@ -1626,7 +1628,7 @@ Dead Load Moment, $M_{DL,oh}$ & $w_{DL}\,l_{oh}^2/2$ + railing & """ + _dkoh(KEY
 \hline
 Live Load Moment (eccentric wheel), $M_{LL,oh}$ & Wheel load $\times$ arm & """ + _dkoh(KEY_DD_M_LL_OH, nd=2, unit=" kN-m/m") + r""" & --- \\[6pt]
 \hline
-Total Hogging Moment, $M_{u,oh}$ & """ + _dkf(KEY_DD_GAMMA_DL, nd=2) + r"""\,$M_{DL,oh}$ + """ + _dkf(KEY_DD_GAMMA_LL, nd=2) + r"""[(1+IF)\,$M_{LL,oh}$ + $M_{barrier}$] & """ + _dkoh(KEY_DD_M_ULS_OH, nd=2, unit=" kN-m/m") + r""" & --- \\[6pt]
+Total Hogging Moment, $M_{u,oh}$ & """ + _dkf(KEY_DD_GAMMA_DL, nd=2) + r"""\,$M_{DL,oh}$ + """ + _dkf(KEY_DD_GAMMA_LL, nd=2) + r"""[(1+i)\,$M_{LL,oh}$ + $M_{barrier}$] & """ + _dkoh(KEY_DD_M_ULS_OH, nd=2, unit=" kN-m/m") + r""" & --- \\[6pt]
 \hline
 Effective depth, $d$ & $t_s - c_{nom} - \phi/2$ & """ + _dkoh(KEY_DD_D_OH, nd=1, unit=" mm") + r""" & --- \\[6pt]
 \hline
@@ -1643,7 +1645,7 @@ Moment Capacity (top steel), $M_{Rd,oh}$ & IRC 112 Cl. 9.2, Cl. 8.2.1 & """ + _d
 \hline
 \textbf{Parameter} & \textbf{Formula / Reference} & \textbf{Value} & \textbf{Status} \\[6pt]
 \hline
-Design Wheel Load (ULS), $V_{Ed}$ & $\gamma_Q\,(1+IF)\,P_w$ & """ + _dkf(KEY_DD_PUNCH_VED_KN, nd=1) + r""" kN & --- \\[6pt]
+Design Wheel Load (ULS), $V_{Ed}$ & $\gamma_Q\,(1+i)\,P_w$ & """ + _dkf(KEY_DD_PUNCH_VED_KN, nd=1) + r""" kN & --- \\[6pt]
 \hline
 Tyre Contact Area & $a \times b$ (IRC 6 Annex~A) & """ + _dkf(KEY_DD_TYRE_WIDTH, nd=0, scale=1000.0) + r""" $\times$ """ + _dkf(KEY_DD_TYRE_LENGTH, nd=0) + r""" mm & --- \\[6pt]
 \hline
