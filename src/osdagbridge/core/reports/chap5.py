@@ -14,7 +14,9 @@ from osdagbridge.core.utils.common import (
     KEY_DD_AS_TOP,
     KEY_DD_COVER_OK,
     KEY_DD_DIA_BOT,
+    KEY_DD_DIA_TOP,
     KEY_DD_D_BOT,
+    KEY_DD_D_TOP,
     KEY_DD_FY,
     KEY_DD_GAMMA_DL,
     KEY_DD_GAMMA_LL,
@@ -44,6 +46,7 @@ from osdagbridge.core.utils.common import (
     KEY_DD_SPACING_MAX,
     KEY_DD_SPAN,
     KEY_DD_SPC_BOT,
+    KEY_DD_SPC_TOP,
     KEY_DD_TYRE_LENGTH,
     KEY_DD_TYRE_WIDTH,
     KEY_DD_VEHICLE,
@@ -1138,6 +1141,31 @@ Fatigue Shear Resistance, $Q_r$ & IRC 22 Table 8 ($\phi d$, $N_{sc}$) & """
         """PASS/FAIL status; '---' when deck design not run."""
         return ("PASS" if ok else "FAIL") if _dk_has else "---"
 
+    def _inv(key, default=0.0):
+        """Raw float from bridge.input_dict (material properties, not deck_rpt)."""
+        v = bridge.input_dict.get(key)
+        if v is None or v == "":
+            return default
+        try:
+            return float(v)
+        except (TypeError, ValueError):
+            return default
+
+    def _dk_xu_mm(as_key):
+        """
+        Neutral-axis depth xu (mm) for the given provided-steel key — same
+        formula as deckdesign._moment_capacity_kNm() (b = 1000 mm strip),
+        re-derived here for report traceability only; M_Rd itself is
+        unchanged and still comes from KEY_DD_MU_BOT / KEY_DD_MU_TOP.
+        """
+        if not _dk_has:
+            return _DKPH
+        fck = _inv(KEY_MATERIAL_DECK_FCK)
+        if fck <= 0:
+            return _DKPH
+        xu = (0.87 * _dkv(KEY_DD_FY) * _dkv(as_key)) / (0.36 * fck * 1000.0)
+        return f"{xu:.1f}"
+
     def _dkoh(key, nd=2, scale=1.0, unit=""):
         """Overhang value; 'N/A' when there is no overhang."""
         if not _dk_has:
@@ -1588,7 +1616,7 @@ The reinforced concrete deck slab is designed per IRC~112:2011 (flexure, shear, 
 \hline
 \textbf{Location} & \textbf{Parameter} & \textbf{Formula / Reference} & \textbf{Value} & \textbf{Status} \\[6pt]
 \hline
-\multirow{5}{*}{\makecell{At Midspan\\(Sagging)}} & Transverse BM (DL), $M_{T,DL}$ & $w_{DL}\,l_{eff}^2/10$ & """ + _dkf(KEY_DD_M_DL, nd=2) + r""" kN-m/m & --- \\[6pt]
+\multirow{7}{*}{\makecell{At Midspan\\(Sagging)}} & Transverse BM (DL), $M_{T,DL}$ & $w_{DL}\,l_{eff}^2/10$ & """ + _dkf(KEY_DD_M_DL, nd=2) + r""" kN-m/m & --- \\[6pt]
 \cline{2-5}
  & Transverse BM (LL), $M_{T,LL}$ & Effective width (IRC 112 B3.1) & """ + _dkf(KEY_DD_M_LL, nd=2) + r""" kN-m/m & --- \\[6pt]
 \cline{2-5}
@@ -1596,16 +1624,26 @@ The reinforced concrete deck slab is designed per IRC~112:2011 (flexure, shear, 
 \cline{2-5}
  & Effective depth, $d$ & $t_s - c_{nom} - \phi/2$ & """ + _dkf(KEY_DD_D_BOT, nd=1) + r""" mm & --- \\[6pt]
 \cline{2-5}
- & Moment Capacity, $M_{Rd}$ & IRC 112 Cl. 12.2 & """ + _dkf(KEY_DD_MU_BOT, nd=2) + r""" kN-m/m & """ + _dks(_dkv(KEY_DD_MU_BOT) >= _dkv(KEY_DD_M_ULS_SAG)) + r""" \\[6pt]
+ & Provided Reinforcement, $A_s$ & $\phi$""" + _dkf(KEY_DD_DIA_BOT, nd=0) + r"""\,@\,""" + _dkf(KEY_DD_SPC_BOT, nd=0) + r"""\,mm c/c & """ + _dkf(KEY_DD_AS_BOT, nd=0) + r""" mm²/m & --- \\[6pt]
+\cline{2-5}
+ & Neutral-axis depth, $x_u$ & $0.87\,f_y\,A_s / (0.36\,f_{ck}\,b)$ & """ + _dk_xu_mm(KEY_DD_AS_BOT) + r""" mm & --- \\[6pt]
+\cline{2-5}
+ & Moment Capacity, $M_{Rd}$ & $0.87\,f_y\,A_s\,(d-0.42\,x_u)$ (IRC 112 Cl. 8.2.1, Cl. 9.2) & """ + _dkf(KEY_DD_MU_BOT, nd=2) + r""" kN-m/m & """ + _dks(_dkv(KEY_DD_MU_BOT) >= _dkv(KEY_DD_M_ULS_SAG)) + r""" \\[6pt]
 \hline
-\multirow{3}{*}{\makecell{At Support\\(Hogging)}} & Total Design BM, $M_{u,hog}$ & """ + _dkf(KEY_DD_GAMMA_DL, nd=2) + r""" DL + """ + _dkf(KEY_DD_GAMMA_LL, nd=2) + r""" LL (at support) & """ + _dkf(KEY_DD_M_ULS_HOG, nd=2) + r""" kN-m/m & --- \\[6pt]
+\multirow{6}{*}{\makecell{At Support\\(Hogging)}} & Total Design BM, $M_{u,hog}$ & """ + _dkf(KEY_DD_GAMMA_DL, nd=2) + r""" DL + """ + _dkf(KEY_DD_GAMMA_LL, nd=2) + r""" LL (at support) & """ + _dkf(KEY_DD_M_ULS_HOG, nd=2) + r""" kN-m/m & --- \\[6pt]
 \cline{2-5}
  & Required Top Steel, $A_{st,top}$ & $M_u / (0.87\,f_y\,d)$ & """ + _dkf(KEY_DD_AS_REQ_TOP, nd=0) + r""" mm²/m & --- \\[6pt]
 \cline{2-5}
- & Moment Capacity, $M_{Rd}$ & IRC 112 Cl. 12.2 & """ + _dkf(KEY_DD_MU_TOP, nd=2) + r""" kN-m/m & """ + _dks(_dkv(KEY_DD_MU_TOP) >= _dkv(KEY_DD_M_ULS_HOG)) + r""" \\[6pt]
+ & Effective depth, $d$ & $t_s - c_{nom} - \phi/2$ & """ + _dkf(KEY_DD_D_TOP, nd=1) + r""" mm & --- \\[6pt]
+\cline{2-5}
+ & Provided Top Reinforcement, $A_s$ & $\phi$""" + _dkf(KEY_DD_DIA_TOP, nd=0) + r"""\,@\,""" + _dkf(KEY_DD_SPC_TOP, nd=0) + r"""\,mm c/c & """ + _dkf(KEY_DD_AS_TOP, nd=0) + r""" mm²/m & --- \\[6pt]
+\cline{2-5}
+ & Neutral-axis depth, $x_u$ & $0.87\,f_y\,A_s / (0.36\,f_{ck}\,b)$ & """ + _dk_xu_mm(KEY_DD_AS_TOP) + r""" mm & --- \\[6pt]
+\cline{2-5}
+ & Moment Capacity, $M_{Rd}$ & $0.87\,f_y\,A_s\,(d-0.42\,x_u)$ (IRC 112 Cl. 8.2.1, Cl. 9.2) & """ + _dkf(KEY_DD_MU_TOP, nd=2) + r""" kN-m/m & """ + _dks(_dkv(KEY_DD_MU_TOP) >= _dkv(KEY_DD_M_ULS_HOG)) + r""" \\[6pt]
 \hline
 \end{longtable}
-\noindent\textit{Note: IRC 112 Cl. 12.2. Distribution (longitudinal) reinforcement designed for 20\% of main steel moment (IRC 21 Cl. 305.18).}
+\noindent\textit{Note: IRC 112 Cl. 8.2.1, Cl. 9.2. Distribution (longitudinal) reinforcement designed for 20\% of main steel moment (IRC 21 Cl. 305.18).}
 
 \vspace{1em}
 \begin{longtable}{|L{5.5cm}|C{3.5cm}|>{\centering\arraybackslash}p{4.5cm}|C{2cm}|}
