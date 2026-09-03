@@ -9,12 +9,16 @@ from osdagbridge.core.utils.common import (
     KEY_DD_AS_BOT,
     KEY_DD_AS_LONG,
     KEY_DD_AS_MIN,
+    KEY_DD_AS_OH,
     KEY_DD_AS_REQ_BOT,
+    KEY_DD_AS_REQ_OH,
     KEY_DD_AS_REQ_TOP,
     KEY_DD_AS_TOP,
     KEY_DD_COVER_OK,
     KEY_DD_DIA_BOT,
+    KEY_DD_DIA_OH,
     KEY_DD_D_BOT,
+    KEY_DD_D_OH,
     KEY_DD_FY,
     KEY_DD_GAMMA_DL,
     KEY_DD_GAMMA_LL,
@@ -44,6 +48,7 @@ from osdagbridge.core.utils.common import (
     KEY_DD_SPACING_MAX,
     KEY_DD_SPAN,
     KEY_DD_SPC_BOT,
+    KEY_DD_SPC_OH,
     KEY_DD_TYRE_LENGTH,
     KEY_DD_TYRE_WIDTH,
     KEY_DD_VEHICLE,
@@ -1596,16 +1601,16 @@ The reinforced concrete deck slab is designed per IRC~112:2011 (flexure, shear, 
 \cline{2-5}
  & Effective depth, $d$ & $t_s - c_{nom} - \phi/2$ & """ + _dkf(KEY_DD_D_BOT, nd=1) + r""" mm & --- \\[6pt]
 \cline{2-5}
- & Moment Capacity, $M_{Rd}$ & IRC 112 Cl. 12.2 & """ + _dkf(KEY_DD_MU_BOT, nd=2) + r""" kN-m/m & """ + _dks(_dkv(KEY_DD_MU_BOT) >= _dkv(KEY_DD_M_ULS_SAG)) + r""" \\[6pt]
+ & Moment Capacity, $M_{Rd}$ & IRC 112 Cl. 9.2, Cl. 8.2.1 & """ + _dkf(KEY_DD_MU_BOT, nd=2) + r""" kN-m/m & """ + _dks(_dkv(KEY_DD_MU_BOT) >= _dkv(KEY_DD_M_ULS_SAG)) + r""" \\[6pt]
 \hline
 \multirow{3}{*}{\makecell{At Support\\(Hogging)}} & Total Design BM, $M_{u,hog}$ & $0.75\,M_{u,sag}$ & """ + _dkf(KEY_DD_M_ULS_HOG, nd=2) + r""" kN-m/m & --- \\[6pt]
 \cline{2-5}
  & Required Top Steel, $A_{st,top}$ & $M_u / (0.87\,f_y\,d)$ & """ + _dkf(KEY_DD_AS_REQ_TOP, nd=0) + r""" mm²/m & --- \\[6pt]
 \cline{2-5}
- & Moment Capacity, $M_{Rd}$ & IRC 112 Cl. 12.2 & """ + _dkf(KEY_DD_MU_TOP, nd=2) + r""" kN-m/m & """ + _dks(_dkv(KEY_DD_MU_TOP) >= _dkv(KEY_DD_M_ULS_HOG)) + r""" \\[6pt]
+ & Moment Capacity, $M_{Rd}$ & IRC 112 Cl. 9.2, Cl. 8.2.1 & """ + _dkf(KEY_DD_MU_TOP, nd=2) + r""" kN-m/m & """ + _dks(_dkv(KEY_DD_MU_TOP) >= _dkv(KEY_DD_M_ULS_HOG)) + r""" \\[6pt]
 \hline
 \end{longtable}
-\noindent\textit{Note: IRC 112 Cl. 12.2. Distribution (longitudinal) reinforcement designed for 20\% of main steel moment (IRC 21 Cl. 305.18).}
+\noindent\textit{Note: IRC 112 Cl. 9.2, Cl. 8.2.1. Distribution (longitudinal) reinforcement designed for 20\% of main steel moment (IRC 21 Cl. 305.18).}
 
 \vspace{1em}
 \begin{longtable}{|L{5.5cm}|C{3.5cm}|>{\centering\arraybackslash}p{4.5cm}|C{2cm}|}
@@ -1623,10 +1628,14 @@ Live Load Moment (eccentric wheel), $M_{LL,oh}$ & Wheel load $\times$ arm & """ 
 \hline
 Total Hogging Moment, $M_{u,oh}$ & """ + _dkf(KEY_DD_GAMMA_DL, nd=2) + r"""\,$M_{DL,oh}$ + """ + _dkf(KEY_DD_GAMMA_LL, nd=2) + r"""[(1+IF)\,$M_{LL,oh}$ + $M_{barrier}$] & """ + _dkoh(KEY_DD_M_ULS_OH, nd=2, unit=" kN-m/m") + r""" & --- \\[6pt]
 \hline
-Moment Capacity (top steel), $M_{Rd,oh}$ & IRC 112 Cl. 12.2 & """ + _dkoh(KEY_DD_MU_OH, nd=2, unit=" kN-m/m") + r""" & """ + (_dks(_dkv(KEY_DD_MU_OH) >= _dkv(KEY_DD_M_ULS_OH)) if _dk_oh else ("N/A" if _dk_has else "---")) + r""" \\[6pt]
+Effective depth, $d$ & $t_s - c_{nom} - \phi/2$ & """ + _dkoh(KEY_DD_D_OH, nd=1, unit=" mm") + r""" & --- \\[6pt]
+\hline
+Top Reinforcement Provided & --- & $\phi$""" + _dkoh(KEY_DD_DIA_OH, nd=0) + r""" @ """ + _dkoh(KEY_DD_SPC_OH, nd=0) + r""" mm c/c (""" + _dkoh(KEY_DD_AS_OH, nd=0) + r""" mm²/m) & --- \\[6pt]
+\hline
+Moment Capacity (top steel), $M_{Rd,oh}$ & IRC 112 Cl. 9.2, Cl. 8.2.1 & """ + _dkoh(KEY_DD_MU_OH, nd=2, unit=" kN-m/m") + r""" & """ + (_dks(_dkv(KEY_DD_MU_OH) >= _dkv(KEY_DD_M_ULS_OH)) if _dk_oh else ("N/A" if _dk_has else "---")) + r""" \\[6pt]
 \hline
 \end{longtable}
-\noindent\textit{Note: IRC 6 Cl. 206.4 crash barrier loads applied at kerb face; IRC 112 Cl. 12.2 flexure.}
+\noindent\textit{Note: IRC 6 Cl. 206.4 crash barrier loads applied at kerb face; IRC 112 Cl. 9.2, Cl. 8.2.1 flexure.}
 
 \vspace{1em}
 \begin{longtable}{|L{5.5cm}|C{3.5cm}|>{\centering\arraybackslash}p{4.5cm}|C{2cm}|}
@@ -1711,9 +1720,13 @@ Max.\ Bar Spacing (IRC 112 Cl. 16.3.2) & """ + _dkf(KEY_DD_SPACING_MAX, nd=0) + 
 \hline
 Required Area, $A_{st,dist}$ (mm²/m) & $\geq 20\%$ of main steel & """ + _dkf(KEY_DD_AS_LONG, nd=0) + r""" mm²/m & """ + _dks(_dkv(KEY_DD_AS_LONG) >= max(0.20 * _dkv(KEY_DD_AS_BOT), _dkv(KEY_DD_AS_MIN))) + r""" \\[6pt]
 \hline
-\multicolumn{4}{|l|}{\textbf{Top Reinforcement (Support / Cantilever Overhang)}} \\[6pt]
+\multicolumn{4}{|l|}{\textbf{Top Reinforcement (Support)}} \\[6pt]
 \hline
 Required Area, $A_{st,top}$ (mm²/m) & """ + _dkf(KEY_DD_AS_REQ_TOP, nd=0) + r""" mm²/m & """ + _dkf(KEY_DD_AS_TOP, nd=0) + r""" mm²/m & """ + _dks(_dkv(KEY_DD_AS_TOP) >= _dkv(KEY_DD_AS_REQ_TOP)) + r""" \\[6pt]
+\hline
+\multicolumn{4}{|l|}{\textbf{Top Reinforcement (Cantilever Overhang)}} \\[6pt]
+\hline
+Required Area, $A_{st,oh}$ (mm²/m) & """ + _dkoh(KEY_DD_AS_REQ_OH, nd=0, unit=" mm²/m") + r""" & $\phi$""" + _dkoh(KEY_DD_DIA_OH, nd=0) + r""" @ """ + _dkoh(KEY_DD_SPC_OH, nd=0) + r""" mm c/c (""" + _dkoh(KEY_DD_AS_OH, nd=0) + r""" mm²/m) & """ + (_dks(_dkv(KEY_DD_AS_OH) >= _dkv(KEY_DD_AS_REQ_OH)) if _dk_oh else ("N/A" if _dk_has else "---")) + r""" \\[6pt]
 \hline
 \multicolumn{4}{|l|}{\textbf{Cover and Detailing}} \\[6pt]
 \hline
