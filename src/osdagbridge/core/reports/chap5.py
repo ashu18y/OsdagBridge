@@ -5,6 +5,8 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
+from osdagbridge.core.utils.codes.irc6_2017 import IRC6_2017
+
 from osdagbridge.core.utils.common import (
     KEY_DD_AS_BOT,
     KEY_DD_AS_LONG,
@@ -1174,6 +1176,23 @@ Fatigue Shear Resistance, $Q_r$ & IRC 22 Table 8 ($\phi d$, $N_{sc}$) & """
             return "N/A"
         return _dkf(key, nd=nd, scale=scale) + unit
 
+    def _dk_ohnum(x, nd=2, unit=""):
+        """Format a locally-derived overhang float the same way _dkoh does."""
+        if not _dk_has:
+            return _DKPH
+        if not _dk_oh:
+            return "N/A"
+        return f"{x:.{nd}f}" + unit
+
+    # Overhang dead-load moment breakdown (railing + slab) — report
+    # traceability only (Issue #355); KEY_DD_M_DL_OH itself is unchanged and
+    # still comes from deckdesign.py (M_DL_slab_oh + M_DL_railing_oh there).
+    _dk_railing_kg_m = IRC6_2017.cl_206_5_railing_load()
+    _dk_railing_kN_m = _dk_railing_kg_m * 9.81 / 1000.0
+    _dk_l_oh = _inv(KEY_TS_DECK_OVERHANG)
+    _dk_M_DL_slab_oh = _dkv(KEY_DD_WDL) * _dk_l_oh ** 2 / 2.0
+    _dk_M_railing_oh = _dk_railing_kN_m * _dk_l_oh
+
     # Governing crack width = max(bottom, top[, overhang]) vs the limit.
     _dk_wks = [_dkv(KEY_DD_WK_BOT), _dkv(KEY_DD_WK_TOP)]
     if _dk_oh:
@@ -1655,7 +1674,15 @@ Overhang Length, $l_{oh}$ & --- & """ + _render_value(bridge.input_dict, KEY_TS_
 \hline
 Crash Barrier Load Moment & IRC 6 Cl. 206.4 & """ + _dkoh(KEY_DD_M_BARRIER, nd=2, unit=" kN-m/m") + r""" & --- \\[6pt]
 \hline
-Dead Load Moment & $w_{DL}\,l_{oh}^2/2$ + railing & """ + _dkoh(KEY_DD_M_DL_OH, nd=2, unit=" kN-m/m") + r""" & --- \\[6pt]
+Railing Load, $w_{railing}$ & """ + _dk_ohnum(_dk_railing_kg_m, nd=0, unit=" kg/m") + r""" (IRC 6-2017 Cl. 206.5) & """ + _dk_ohnum(_dk_railing_kN_m, nd=4, unit=" kN/m") + r""" & --- \\[6pt]
+\hline
+Railing Lever Arm, $e_r$ & $= l_{oh}$ (at overhang tip) & """ + _dk_ohnum(_dk_l_oh, nd=3, unit=" m") + r""" & --- \\[6pt]
+\hline
+Railing Moment, $M_{railing}$ & $w_{railing}\,e_r$ & """ + _dk_ohnum(_dk_M_railing_oh, nd=2, unit=" kN-m/m") + r""" & --- \\[6pt]
+\hline
+Slab Dead Load Moment, $M_{DL,slab}$ & $w_{DL}\,l_{oh}^2/2$ & """ + _dk_ohnum(_dk_M_DL_slab_oh, nd=2, unit=" kN-m/m") + r""" & --- \\[6pt]
+\hline
+Dead Load Moment, $M_{DL}$ & $M_{DL,slab} + M_{railing}$ & """ + _dkoh(KEY_DD_M_DL_OH, nd=2, unit=" kN-m/m") + r""" & --- \\[6pt]
 \hline
 Live Load Moment (eccentric wheel) & Wheel load $\times$ arm & """ + _dkoh(KEY_DD_M_LL_OH, nd=2, unit=" kN-m/m") + r""" & --- \\[6pt]
 \hline
