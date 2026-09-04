@@ -1146,6 +1146,36 @@ Fatigue Shear Resistance, $Q_r$ & IRC 22 Table 8 ($\phi d$, $N_{sc}$) & """
             return "N/A"
         return _dkf(key, nd=nd, scale=scale) + unit
 
+    def _inv(key, default=0.0):
+        """Raw float from bridge.input_dict (material properties, not deck_rpt)."""
+        v = bridge.input_dict.get(key)
+        if v is None or v == "":
+            return default
+        try:
+            return float(v)
+        except (TypeError, ValueError):
+            return default
+
+    def _dk_num(x, nd=2, unit=""):
+        """Format a locally-derived float; placeholder when deck design not run."""
+        if not _dk_has:
+            return _DKPH
+        return f"{x:.{nd}f}" + unit
+
+    # Punching shear resistance v_Rd,c intermediate values (Issue #362) — same
+    # formula as deckdesign._v_Rd_c_MPa(As_bot, d_bot_mm, fck); KEY_DD_VRD_C_MPA
+    # itself is unchanged. sigma_cp = 0 in the current implementation, so it is
+    # not shown as a separate parameter (matching the actual code).
+    _dk_fck_punch = _inv(KEY_MATERIAL_DECK_FCK)
+    _dk_d_punch = _dkv(KEY_DD_D_BOT)
+    _dk_K_punch = min(1.0 + (200.0 / _dk_d_punch) ** 0.5, 2.0) if _dk_d_punch > 0 else 0.0
+    _dk_rho_l_punch = min(_dkv(KEY_DD_AS_BOT) / (1000.0 * _dk_d_punch), 0.02) if _dk_d_punch > 0 else 0.0
+    _dk_vmin_punch = 0.031 * _dk_K_punch ** 1.5 * _dk_fck_punch ** 0.5 if _dk_fck_punch > 0 else 0.0
+    _dk_vterm_punch = (
+        0.12 * _dk_K_punch * (80.0 * _dk_rho_l_punch * _dk_fck_punch) ** 0.33
+        if (_dk_fck_punch > 0 and _dk_rho_l_punch > 0) else 0.0
+    )
+
     # Governing crack width = max(bottom, top[, overhang]) vs the limit.
     _dk_wks = [_dkv(KEY_DD_WK_BOT), _dkv(KEY_DD_WK_TOP)]
     if _dk_oh:
@@ -1644,7 +1674,19 @@ Control Perimeter, $u_1$ & $2(c_1+c_2) + 4\pi d$ & """ + _dkf(KEY_DD_PUNCH_U1, n
 \hline
 Punching Shear Stress, $v_{Ed}$ & $V_{Ed} / (u_1\,d)$ & """ + _dkf(KEY_DD_PUNCH_VED, nd=3) + r""" MPa & --- \\[6pt]
 \hline
-Punching Resistance, $v_{Rd,c}$ & IRC 112 Eq.\ 10.1 & """ + _dkf(KEY_DD_VRD_C_MPA, nd=3) + r""" MPa & --- \\[6pt]
+Concrete Grade, $f_{ck}$ & --- & """ + _dk_num(_dk_fck_punch, nd=0, unit=" MPa") + r""" & --- \\[6pt]
+\hline
+Effective Depth, $d$ & --- & """ + _dkf(KEY_DD_D_BOT, nd=1) + r""" mm & --- \\[6pt]
+\hline
+Size Factor, $K$ & $1+\sqrt{200/d} \leq 2.0$ & """ + _dk_num(_dk_K_punch, nd=3) + r""" & --- \\[6pt]
+\hline
+Long.\ Reinforcement Ratio, $\rho_l$ & $A_{s,bot} / (b\,d) \leq 0.02$ & """ + _dk_num(_dk_rho_l_punch, nd=4) + r""" & --- \\[6pt]
+\hline
+Reinforcement Term & $0.12\,K\,(80\,\rho_l\,f_{ck})^{0.33}$ & """ + _dk_num(_dk_vterm_punch, nd=3, unit=" MPa") + r""" & --- \\[6pt]
+\hline
+Minimum Resistance, $v_{min}$ & $0.031\,K^{1.5}\sqrt{f_{ck}}$ & """ + _dk_num(_dk_vmin_punch, nd=3, unit=" MPa") + r""" & --- \\[6pt]
+\hline
+Punching Resistance, $v_{Rd,c}$ & IRC:112-2020 Cl.\ 10.4.4, Eq.\ 10.33: $\max[0.12K(80\rho_l f_{ck})^{0.33},\,v_{min}]$ ($\sigma_{cp}{=}0$) & """ + _dkf(KEY_DD_VRD_C_MPA, nd=3) + r""" MPa & --- \\[6pt]
 \hline
 Punching Shear Check & $v_{Ed} \leq v_{Rd,c}$ & """ + (f"{_dkv(KEY_DD_PUNCH_VED) / _dkv(KEY_DD_VRD_C_MPA):.2f}" if (_dk_has and _dkv(KEY_DD_VRD_C_MPA) > 0) else _DKPH) + r""" & """ + _dks(bool(deck_rpt.get(KEY_DD_PUNCH_OK))) + r""" \\[6pt]
 \hline
