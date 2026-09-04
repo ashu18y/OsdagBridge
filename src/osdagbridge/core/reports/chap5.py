@@ -6,8 +6,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from osdagbridge.core.utils.codes.irc6_2017 import IRC6_2017
+from osdagbridge.core.utils.codes.irc112_2019 import IRC112_2019
 
 from osdagbridge.core.utils.common import (
+    KEY_CARRIAGEWAY_WIDTH,
     KEY_DD_AS_BOT,
     KEY_DD_AS_LONG,
     KEY_DD_AS_MIN,
@@ -164,7 +166,9 @@ from osdagbridge.core.utils.common import (
     KEY_UTIL_FLEXURE,
     KEY_UTIL_INTERACTION,
     KEY_UTIL_LTB,
-    KEY_UTIL_SHEAR
+    KEY_UTIL_SHEAR,
+    KEY_VEHICLE,
+    KEY_WC_THICKNESS,
 )
 
 from osdagbridge.core.reports.report_utils import _tex, _render_value, get_girder_entries
@@ -1193,6 +1197,24 @@ Fatigue Shear Resistance, $Q_r$ & IRC 22 Table 8 ($\phi d$, $N_{sc}$) & """
     _dk_M_DL_slab_oh = _dkv(KEY_DD_WDL) * _dk_l_oh ** 2 / 2.0
     _dk_M_railing_oh = _dk_railing_kN_m * _dk_l_oh
 
+    # Overhang live-load moment breakdown — report traceability only
+    # deckdesign.py. beff is read-only via the same IRC112_2019 helper
+    # deckdesign.py calls, so it cannot drift from the real calculation.
+    _dk_f_edge = IRC6_2017.table_3(_inv(KEY_CARRIAGEWAY_WIDTH))["f"]
+    _dk_arm_wheel = max(_dk_l_oh - _dk_f_edge, 0.0)
+    _dk_wc_t_m = _inv(KEY_WC_THICKNESS) / 1000.0
+    _dk_b1_oh = _dkv(KEY_DD_TYRE_WIDTH) + 2.0 * _dk_wc_t_m
+    _dk_beff_oh = (
+        IRC112_2019.eq_B32_effective_width_cantilever(_dk_arm_wheel, _dk_b1_oh, _inv(KEY_SPAN))
+        if _dk_arm_wheel > 0.0 else _dk_l_oh
+    )
+    _dk_i_frac = _dkv(KEY_DD_IMPACT_FACTOR) - 1.0
+    _dk_ll_ref = (
+        "IRC 6-2017 Cl. 208.3"
+        if deck_rpt.get(KEY_DD_VEHICLE) in (KEY_VEHICLE[0], KEY_VEHICLE[1])
+        else "IRC 6-2017 Cl. 208.2"
+    )
+
     # Governing crack width = max(bottom, top[, overhang]) vs the limit.
     _dk_wks = [_dkv(KEY_DD_WK_BOT), _dkv(KEY_DD_WK_TOP)]
     if _dk_oh:
@@ -1684,7 +1706,25 @@ Slab Dead Load Moment, $M_{DL,slab}$ & $w_{DL}\,l_{oh}^2/2$ & """ + _dk_ohnum(_d
 \hline
 Dead Load Moment, $M_{DL}$ & $M_{DL,slab} + M_{railing}$ & """ + _dkoh(KEY_DD_M_DL_OH, nd=2, unit=" kN-m/m") + r""" & --- \\[6pt]
 \hline
-Live Load Moment (eccentric wheel) & Wheel load $\times$ arm & """ + _dkoh(KEY_DD_M_LL_OH, nd=2, unit=" kN-m/m") + r""" & --- \\[6pt]
+Wheel Load, $P_w$ & IRC 6-2017 Cl. 204.1 & """ + _dkoh(KEY_DD_WHEEL_LOAD, nd=2, unit=" kN") + r""" & --- \\[6pt]
+\hline
+Edge Clearance, $f$ & IRC 6-2017 Table 3 & """ + _dk_ohnum(_dk_f_edge, nd=3, unit=" m") + r""" & --- \\[6pt]
+\hline
+Eccentric Wheel Arm, $e$ & $e = l_{oh} - f$ & """ + _dk_ohnum(_dk_arm_wheel, nd=3, unit=" m") + r""" & --- \\[6pt]
+\hline
+Tyre Contact Width & IRC 6-2017 Table 2 / Fig.\ 1 & """ + _dkoh(KEY_DD_TYRE_WIDTH, nd=0, scale=1000.0, unit=" mm") + r""" & --- \\[6pt]
+\hline
+Wearing Course Thickness & --- & """ + _dk_ohnum(_dk_wc_t_m * 1000.0, nd=0, unit=" mm") + r""" & --- \\[6pt]
+\hline
+Load Concentration Breadth, $b_1$ & tyre width $+\,2\times$ WC thickness & """ + _dk_ohnum(_dk_b1_oh * 1000.0, nd=0, unit=" mm") + r""" & --- \\[6pt]
+\hline
+Effective Width, $b_{eff}$ & IRC 112:2020 Eq.\ B3.2, $1.2e+b_1 \leq L/3$ & """ + _dk_ohnum(_dk_beff_oh, nd=3, unit=" m") + r""" & --- \\[6pt]
+\hline
+Impact Factor Fraction, $i$ & """ + _dk_ll_ref + r""" & """ + _dk_ohnum(_dk_i_frac, nd=3) + r""" & --- \\[6pt]
+\hline
+Impact Multiplier, $(1+i)$ & \textit{applied later, in $M_{u,oh}$ below --- not included in $M_{LL,oh}$} & """ + _dkoh(KEY_DD_IMPACT_FACTOR, nd=3) + r""" & --- \\[6pt]
+\hline
+Live Load Moment (eccentric wheel), $M_{LL,oh}$ & $P_w\,e / b_{eff}$ & """ + _dkoh(KEY_DD_M_LL_OH, nd=2, unit=" kN-m/m") + r""" & --- \\[6pt]
 \hline
 Total Hogging Moment, $M_{u,oh}$ & """ + _dkf(KEY_DD_GAMMA_DL, nd=2) + r""" DL + """ + _dkf(KEY_DD_GAMMA_LL, nd=2) + r""" (LL + CB) & """ + _dkoh(KEY_DD_M_ULS_OH, nd=2, unit=" kN-m/m") + r""" & --- \\[6pt]
 \hline
